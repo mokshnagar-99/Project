@@ -1,0 +1,49 @@
+# Render Infrastructure-as-Code Blueprint
+# Deploy instantly at https://dashboard.render.com/blueprints
+
+services:
+  # 1. FastAPI Web Service (Interactive UI & REST API)
+  - type: web
+    name: groq-pipeline-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api_server:app --host 0.0.0.0 --port $PORT
+    plan: starter
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false # Set in Render UI dashboard
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: groq-pipeline-redis
+          property: connectionString
+
+  # 2. Orchestrator Background Worker
+  - type: worker
+    name: groq-pipeline-orchestrator
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python orchestrator.py
+    plan: starter
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false # Set in Render UI dashboard
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: MAX_CONCURRENT_WORKERS
+        value: "2"
+      - key: TOKEN_BUDGET_PER_MIN
+        value: "60000"
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: groq-pipeline-redis
+          property: connectionString
+
+  # 3. Managed Redis Instance
+  - type: redis
+    name: groq-pipeline-redis
+    plan: starter
+    ipAllowList: [] # Internal access only

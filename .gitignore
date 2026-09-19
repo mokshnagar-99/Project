@@ -1,0 +1,23 @@
+# Environment variables & secrets
+.env
+*.env
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Generated project files
+generated/
+data/
+
+# IDE files
+.vscode/
+.idea/
